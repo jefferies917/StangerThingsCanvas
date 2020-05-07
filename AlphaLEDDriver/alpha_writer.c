@@ -6,11 +6,20 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define PIN_BASE 300
-#define MAX_PWM 4096
-#define HERTZ 1000
+#define PIN_BASE 300    // Provides PIN reference on the PCA9685 boards
+#define MAX_PWM 4096    // Provides maximum PWN value
+#define FREQUENCY 1000  // Rate at which lights flash (ms)
 
+/**
+ * Sets up flash and delay duration and links each letter to corresponding
+ * pin on the pca9685 boards
+ *
+ * letter:				letter to flash
+ * flash_duration_ms:	time the led will be illumianted for (ms)
+ * kerning_ms:			pause after each flash (ms)
+ */
 void flash_letter
 (
     const char letter,              ///<IN The letter to flash
@@ -41,20 +50,20 @@ int main(int argc, char *argv[])
     }
 
     // Calling wiringPi setup first.
-    wiringPiSetup();
+    wiringPiSetup();    
 
-    int fd = pca9685Setup(PIN_BASE, 0x40, HERTZ);
+    int fd = pca9685Setup(PIN_BASE, 0x40, FREQUENCY);
+    // Tests for error in setup
     if (fd < 0)
     {
-        printf("Error in setup\n");
+        printf("Error setting up pca9685 at GPIO, check pin mappings\n");
         return fd;
     }
 
+    // Sets all leds back to default values
     pca9685PWMReset(fd);
 
-    int i, j;
     int active = 1;
-
     while (active)
     {
         for (int i = 1; i < argc; ++i)
@@ -62,63 +71,21 @@ int main(int argc, char *argv[])
             printf("Message: %s\n", argv[i]);
             for (int j = 0; j < strlen(argv[i]); ++j)
             {
-                printf("%c", *(argv[i] + j));
+                printf("%c\n", *(argv[i] + j));
                 flash_letter(argv[i][j], 1000, 500);
             }
         }
 
-
-        // char message[] = "dadda";
-        // while (message)
+        // Was using this for testing, not needed anymore
+        // char message[] = "abcdefghijklmnop";
+        // for (int i = 0; i < strlen(message); ++i)
         // {
-        //     flash_letter(*message, 1000, 500);
-        //     message++;
-        // }
-        // for (i = 0; i < strlen(message); ++i)
-        // {
-        //     flash_letter(message[i], 1000, 500);
-        // }
-        // // flash_letter('A', 2000, 500);
-        // flash_letter('d', 3000, 200);
-        // flash_letter('a', 500, 250);
-        // flash_letter('A', 4000, 400);
-        // flash_letter('D', 2000, 100);
-        // flash_letter('B', 1000, 200);
-        // for (j = 0; j < 5; j++)
-        // {
-        //     for (i = 0; i < MAX_PWM; i += 32)
-        //     {
-        //         pwmWrite(PIN_BASE + 0, i);
-        //         delay(4);
-        //     }
-
-        //     for (i = 0; i < MAX_PWM; i += 32)
-        //     {
-        //         pwmWrite(PIN_BASE + 0, MAX_PWM - i);
-        //         delay(2);
-        //     }
+        // 	printf("test");
+        //     flash_letter(message[i], 500, 500);
         // }
 
-        // pwmWrite(PIN_BASE + 16, 0);
-        // delay(500);
+        pwmWrite(PIN_BASE + 16, 0);  // Pins powered while 0 < i < 4096
 
-        // for (j = 0; j < 5; j++)
-        // {
-        //     for (i = 0; i < 16; i++)
-        //     {
-        //         pwmWrite(PIN_BASE + i, MAX_PWM);
-        //         delay(20);
-        //     }
-
-        //     for (i = 0; i < 16; i++)
-        //     {
-        //         pwmWrite(PIN_BASE + i, 0);
-        //         delay(20);
-        //     }
-        // }
-
-        pwmWrite(PIN_BASE + 16, 0);
-        delay(500);
     }
 
 
