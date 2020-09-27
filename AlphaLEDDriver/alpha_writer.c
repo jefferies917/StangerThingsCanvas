@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PIN_BASE 300    // Provides PIN reference on the PCA9685 boards
+#define PIN_BASE_AP 300    // Provides PIN reference on the first PCA9685 board
+#define PIN_BASE_QZ 320    // Provides PIN reference on the second PCA9685 board
 #define MAX_PWM 4096    // Provides maximum PWN value
 #define FREQUENCY 1000  // Rate at which lights flash (ms)
 
@@ -22,12 +23,13 @@
  */
 void flash_letter
 (
-    const char letter,              ///<IN The letter to flash
+    char letter,              ///<IN The letter to flash
     const int flash_duration_ms,    ///<IN The time the letter will be illuminated (in ms)
     const int kerning_ms            ///<IN The time pause after this letter
 )
 {
-    const int led = PIN_BASE + (tolower(letter) - (int)'a');
+    letter = tolower(letter);
+    const int led = (letter < (int)'q') ? (PIN_BASE_AP + (letter - (int)'a')) : (PIN_BASE_QZ + (letter - (int)'q'));
     const int pwm_step = 32;
     const int iterations =  (int)((float)MAX_PWM / pwm_step);
     const int d = flash_duration_ms / (iterations);
@@ -50,18 +52,25 @@ int main(int argc, char *argv[])
     }
 
     // Calling wiringPi setup first.
-    wiringPiSetup();    
+    wiringPiSetup();
 
-    int fd = pca9685Setup(PIN_BASE, 0x40, FREQUENCY);
     // Tests for error in setup
-    if (fd < 0)
+    int fd_ap = pca9685Setup(PIN_BASE_AP, 0x40, FREQUENCY);
+    int fd_qz = pca9685Setup(PIN_BASE_QZ, 0x41, FREQUENCY);
+    if (fd_ap < 0)
     {
-        printf("Error setting up pca9685 at GPIO, check pin mappings\n");
-        return fd;
+        printf("Error setting up first pca9685 at GPIO, check pin mappings\n");
+        return fd_ap;
+    }
+    if (fd_qz < 0)
+    {
+        printf("Error setting up second pca9685 at GPIO, check pin mappings\n");
+        return fd_qz;
     }
 
     // Sets all leds back to default values
-    pca9685PWMReset(fd);
+    pca9685PWMReset(fd_ap);
+    pca9685PWMReset(fd_qz);
 
     int active = 1;
     while (active)
@@ -84,10 +93,10 @@ int main(int argc, char *argv[])
         //     flash_letter(message[i], 500, 500);
         // }
 
-        pwmWrite(PIN_BASE + 16, 0);  // Pins powered while 0 < i < 4096
+        pwmWrite(PIN_BASE_AP + 16, 0);  // Pins powered while 0 < i < 4096 for first pca9685
+        pwmWrite(PIN_BASE_QZ + 16, 0);  // Pins powered while 0 < i < 4096 for second pca9685
 
     }
-
 
     return 0;
 }
