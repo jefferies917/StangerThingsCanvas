@@ -10,20 +10,20 @@
 
 #define PIN_BASE_AP 300    // Provides PIN reference on the first PCA9685 board
 #define PIN_BASE_QZ 320    // Provides PIN reference on the second PCA9685 board
-#define MAX_PWM 4096    // Provides maximum PWN value
-#define FREQUENCY 1000  // Rate at which lights flash (ms)
+#define MAX_PWM 4096       // Provides maximum PWN (Pulse-width modulation)
+#define FREQUENCY 1000     // Rate at which lights flash (ms)
 
-/**
+/*
  * Sets up flash and delay duration and links each letter to corresponding
  * pin on the pca9685 boards
  *
- * letter:				letter to flash
- * flash_duration_ms:	time the led will be illumianted for (ms)
- * kerning_ms:			pause after each flash (ms)
+ * letter:			     	  letter to flash
+ * flash_duration_ms:	  time the led will be illumianted for (ms)
+ * kerning_ms:		    	pause after each flash (ms)
  */
 void flash_letter
 (
-    char letter,              ///<IN The letter to flash
+    char letter,                    ///<IN The letter to flash
     const int flash_duration_ms,    ///<IN The time the letter will be illuminated (in ms)
     const int kerning_ms            ///<IN The time pause after this letter
 )
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         printf("%s\n", argv[i]);
     }
 
-    // Calling wiringPi setup first.
+    // Calling wiringPi setup first
     wiringPiSetup();
 
     // Tests for error in setup
@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
     pca9685PWMReset(fd_ap);
     pca9685PWMReset(fd_qz);
 
+    // Flashes letter and prints corresponding letter to console
     int active = 1;
     while (active)
     {
@@ -84,14 +85,6 @@ int main(int argc, char *argv[])
                 flash_letter(argv[i][j], 1000, 500);
             }
         }
-
-        // Was using this for testing, not needed anymore
-        // char message[] = "abcdefghijklmnop";
-        // for (int i = 0; i < strlen(message); ++i)
-        // {
-        // 	printf("test");
-        //     flash_letter(message[i], 500, 500);
-        // }
 
         pwmWrite(PIN_BASE_AP + 16, 0);  // Pins powered while 0 < i < 4096 for first pca9685
         pwmWrite(PIN_BASE_QZ + 16, 0);  // Pins powered while 0 < i < 4096 for second pca9685
